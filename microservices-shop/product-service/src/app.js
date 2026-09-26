@@ -1,6 +1,6 @@
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
-const spec = require('./swagger/openapi.json');
+const spec = require('./swagger');
 const app = express();
 app.use(require('helmet')());
 app.use(require('cors')({ origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : false }));
@@ -8,7 +8,7 @@ app.use(require('morgan')('dev'));
 app.use(require('compression')());
 app.use(express.json({ limit: '100kb' }));
 app.get('/health', (req, res) => res.json({ success: true, service: 'product-service' }));
-app.get('/openapi.json', (req, res) => res.json(spec));
+app.get(['/openapi.json', '/api-docs.json'], (req, res) => res.json(spec));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(spec));
 app.use('/api/products', require('./routes/productRoutes'));
 app.get('/api/categories', require('./middleware/asyncHandler')(require('./controllers/productController').getCategories));

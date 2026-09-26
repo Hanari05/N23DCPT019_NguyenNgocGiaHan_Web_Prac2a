@@ -12,13 +12,15 @@
     "test": "node --test"
   },
   "dependencies": {
-    "express": "4.22.3",
     "cors": "2.8.6",
     "dotenv": "16.6.1",
-    "helmet": "8.1.0",
-    "morgan": "1.10.1",
-    "mongoose": "8.24.4",
+    "express": "4.22.3",
     "express-validator": "7.2.1",
+    "helmet": "8.1.0",
+    "jsonwebtoken": "9.0.3",
+    "mongoose": "8.24.4",
+    "morgan": "1.10.1",
+    "swagger-jsdoc": "6.3.0",
     "swagger-ui-express": "5.0.1"
   },
   "devDependencies": {

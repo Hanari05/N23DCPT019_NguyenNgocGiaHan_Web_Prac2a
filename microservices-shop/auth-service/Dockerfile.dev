@@ -3,5 +3,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-cert
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
-COPY . .
-CMD ["npm", "run", "dev"]
+COPY prisma ./prisma
+RUN npx prisma generate
+COPY src ./src
+COPY scripts ./scripts
+ENV NODE_ENV=production
+USER node
+EXPOSE 3003
+CMD ["node", "src/index.js"]

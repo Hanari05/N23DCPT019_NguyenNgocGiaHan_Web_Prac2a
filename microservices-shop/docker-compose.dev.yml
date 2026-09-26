@@ -1,5 +1,10 @@
 # Use: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 services:
+  auth-service:
+    build: { context: ./auth-service, dockerfile: Dockerfile.dev }
+    environment: { NODE_ENV: development }
+    volumes: ["./auth-service/src:/app/src", "./auth-service/prisma:/app/prisma", "./auth-service/scripts:/app/scripts"]
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && npm run dev"
   product-service:
     build: { context: ./product-service, dockerfile: Dockerfile.dev }
     environment: { NODE_ENV: development }

@@ -1,3 +1,6 @@
+process.env.JWT_SECRET='test-only-access-secret-32-characters-minimum';
+const jwt=require('jsonwebtoken');
+const token=jwt.sign({role:'admin',type:'access'},process.env.JWT_SECRET,{subject:'1',algorithm:'HS256',issuer:'lab2a-auth',audience:'lab2a-api',expiresIn:'15m'});
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const RealOrder = require('../src/models/Order');
@@ -5,9 +8,9 @@ const id = '66f123abc456def789012345';
 let stored;
 const model = {
   create: async data => { stored = { ...data, _id: id, status: 'pending' }; return stored; },
-  findById: async key => key === id ? stored : null,
-  findByIdAndUpdate: async (key, data) => { if (key !== id || !stored) return null; Object.assign(stored, data); return stored; },
-  findByIdAndDelete: async key => { if (key !== id) return null; const old = stored; stored = null; return old; },
+  findOne: async where => where._id===id && (!where.customerId||where.customerId===stored?.customerId) ? stored : null,
+  findOneAndUpdate: async (where, data) => { if (where._id !== id || !stored || (where.customerId && where.customerId!==stored.customerId)) return null; Object.assign(stored, data); return stored; },
+  findOneAndDelete: async where => { if (where._id !== id || (where.customerId && where.customerId!==stored?.customerId)) return null; const old = stored; stored = null; return old; },
   find: () => ({ sort() { return this; }, skip() { return this; }, limit() { return Promise.resolve(stored ? [stored] : []); } }),
   countDocuments: async () => stored ? 1 : 0
 };
@@ -19,7 +22,7 @@ let server, base;
 before(async () => { server = app.listen(0, '127.0.0.1'); await new Promise(r => server.once('listening', r)); base = `http://127.0.0.1:${server.address().port}`; });
 after(() => new Promise(r => server.close(r)));
 async function call(path, method = 'GET', body) {
-  const response = await fetch(base + path, { method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
+  const response = await fetch(base + path, { method, headers: { Authorization: 'Bearer '+token, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
   return { status: response.status, body: await response.json() };
 }
 
@@ -46,5 +49,16 @@ test('real Mongoose model rejects invalid item and exposes unique codes', () => 
   const b = new RealOrder({ ...input, items: [], totalAmount: 0 }); assert.notEqual(a.orderCode, b.orderCode);
 });
 test('Swagger describes PATCH and DELETE', async () => {
-  const r = await call('/openapi.json'); assert.ok(r.body.paths['/api/orders/{id}/status'].patch); assert.ok(r.body.paths['/api/orders/{id}'].delete);
+  const alias = await call('/api-docs.json'); assert.equal(alias.status, 200);
+  const r = await call('/openapi.json'); assert.deepEqual(alias.body, r.body); assert.ok(r.body.paths['/api/orders/{id}/status'].patch); assert.ok(r.body.paths['/api/orders/{id}'].delete);
+});
+
+test('JWT required; client cannot forge customerId; other user cannot read/update/delete',async()=>{
+ assert.equal((await fetch(base+'/api/orders')).status,401);
+ const r=await call('/api/orders','POST',{...input,customerId:999});assert.equal(r.body.data.customerId,1);
+ const other=jwt.sign({role:'user',type:'access'},process.env.JWT_SECRET,{subject:'2',algorithm:'HS256',issuer:'lab2a-auth',audience:'lab2a-api',expiresIn:'15m'});
+ for(const [method,path,body] of [['GET',`/api/orders/${id}`],['PATCH',`/api/orders/${id}/status`,{status:'confirmed'}],['DELETE',`/api/orders/${id}`]]){
+ const response=await fetch(base+path,{method,headers:{Authorization:'Bearer '+other,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});assert.equal(response.status,404);
+ }
+ assert.equal((await fetch(base+'/api/orders/customer/1',{headers:{Authorization:'Bearer '+other}})).status,403);
 });

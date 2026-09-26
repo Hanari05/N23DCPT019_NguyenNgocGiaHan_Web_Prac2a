@@ -1,4 +1,3 @@
-// Exercise 1: install pinned prisma/@prisma/client and implement User + RefreshToken.
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,4 +6,24 @@ datasource db {
   url = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
-// TODO: User (unique email, passwordHash, role), RefreshToken (hash, expiresAt, revokedAt).
+model User {
+  id Int @id @default(autoincrement())
+  name String
+  email String @unique
+  passwordHash String
+  role String @default("user")
+  createdAt DateTime @default(now())
+  refreshTokens RefreshToken[]
+  @@map("users")
+}
+model RefreshToken {
+  id Int @id @default(autoincrement())
+  tokenHash String @unique
+  userId Int
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([userId])
+  @@map("refresh_tokens")
+}

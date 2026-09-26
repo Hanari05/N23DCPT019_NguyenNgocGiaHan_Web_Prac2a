@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./middleware/auth').validateConfig();
 async function start() {
   if (!process.env.DATABASE_URL || !process.env.DIRECT_URL) throw new Error('Missing database configuration');
   const prisma = require('./config/prisma');

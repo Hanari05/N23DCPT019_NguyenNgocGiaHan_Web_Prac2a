@@ -1,0 +1,44 @@
+# Lab2a: Product Service and a separate cloud database; local Docker is unchanged.
+services:
+  - type: web
+    name: hanari05-lab2a-product
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./microservices-shop/product-service/Dockerfile
+    dockerContext: ./microservices-shop/product-service
+    dockerCommand: sh -c 'npm run db:migrate && npm run db:seed && exec node src/index.js'
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hanari05-lab2a-products-db
+          property: connectionString
+      - key: DIRECT_URL
+        fromDatabase:
+          name: hanari05-lab2a-products-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: hanari05-lab2a-cache
+          property: connectionString
+  - type: keyvalue
+    name: hanari05-lab2a-cache
+    plan: free
+    region: singapore
+    ipAllowList: []
+
+databases:
+  - name: hanari05-lab2a-products-db
+    plan: free
+    region: singapore
+    databaseName: lab2a_products
+    user: lab2a_products
+    ipAllowList: []

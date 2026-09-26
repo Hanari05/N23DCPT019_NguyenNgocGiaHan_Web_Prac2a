@@ -1,7 +1,9 @@
 module.exports = (err, req, res, next) => {
   if (res.headersSent) return next(err);
   let status = 500, message = 'Lỗi hệ thống';
-  if (err.type === 'entity.parse.failed') { status = 400; message = 'JSON không hợp lệ'; }
+  if (err.code === 'LIMIT_FILE_SIZE') { status=413; message='Ảnh tối đa 5 MB'; }
+  else if (err.name === 'MulterError') { status=400; message='Multipart không hợp lệ; dùng đúng một trường file image'; }
+  else if (err.type === 'entity.parse.failed') { status = 400; message = 'JSON không hợp lệ'; }
   else if (err.type === 'entity.too.large') { status = 413; message = 'Request quá lớn'; }
   else if (err.code === 'P2002' || err.code === 11000) { status = 409; message = 'Dữ liệu duy nhất đã tồn tại'; }
   else if (err.code === 'P2025') { status = 404; message = 'Không tìm thấy bản ghi'; }

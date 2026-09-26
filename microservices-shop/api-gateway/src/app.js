@@ -7,6 +7,16 @@ app.use(require('helmet')());
 app.use(require('cors')({ origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : false }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 100, standardHeaders: 'draft-7', legacyHeaders: false, message: { success: false, message: 'Quá nhiều request, thử lại sau' } }));
 app.get('/health', (req, res) => res.json({ success: true, gateway: true }));
+const { authenticate, admin } = require('./middleware/auth');
+app.use((req,res,next)=>{
+  delete req.headers['x-user-id']; delete req.headers['x-user-role'];
+  const p=req.path.toLowerCase();
+  const orders=p==='/api/orders'||p.startsWith('/api/orders/');
+  const productWrite=(p==='/api/products'||p.startsWith('/api/products/'))&&!['GET','HEAD','OPTIONS'].includes(req.method);
+  const me=p==='/api/auth/me'||p==='/api/auth/me/';
+  if(orders||productWrite||me) return authenticate(req,res,()=>productWrite?admin(req,res,next):next());
+  next();
+});
 // Do not parse JSON before proxying: keep the original request body stream.
 const targets = [
   ['/api/products', process.env.PRODUCT_SERVICE_URL || 'http://localhost:3001'],

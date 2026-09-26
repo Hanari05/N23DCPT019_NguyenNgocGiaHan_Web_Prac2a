@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./middleware/auth').validateConfig();
 async function start() {
   if (!process.env.MONGODB_URI) throw new Error('Missing MONGODB_URI');
   await require('mongoose').connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 });

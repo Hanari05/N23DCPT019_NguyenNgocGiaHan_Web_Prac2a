@@ -1,0 +1,93 @@
+{
+  "testedAt": "2026-09-26T17:16:24.033Z",
+  "productId": 11,
+  "orderId": "6ab7fd6c479b758d66d8334d",
+  "results": [
+    {
+      "endpoint": "POST /api/products",
+      "case": "no token",
+      "status": 401
+    },
+    {
+      "endpoint": "POST /api/products",
+      "case": "invalid body",
+      "status": 422
+    },
+    {
+      "endpoint": "POST /api/products",
+      "case": "admin create",
+      "status": 201
+    },
+    {
+      "endpoint": "GET /api/products/{id}",
+      "status": 200
+    },
+    {
+      "endpoint": "PUT /api/products/{id}",
+      "status": 200
+    },
+    {
+      "endpoint": "GET /api/products",
+      "case": "pagination/search/minPrice",
+      "status": 200
+    },
+    {
+      "endpoint": "GET /api/categories",
+      "status": 200
+    },
+    {
+      "endpoint": "POST /api/products/{id}/image",
+      "status": 200,
+      "imageUrl": "https://res.cloudinary.com/vynafil2/image/upload/v1790436999/lab2a/products/irshqntknx96tqxzxqop.webp"
+    },
+    {
+      "endpoint": "GET /api/orders",
+      "case": "no token",
+      "status": 401
+    },
+    {
+      "endpoint": "GET /api/orders",
+      "case": "authorized",
+      "status": 200
+    },
+    {
+      "endpoint": "POST /api/orders",
+      "status": 201
+    },
+    {
+      "endpoint": "GET /api/orders/customer/{customerId}",
+      "status": 200
+    },
+    {
+      "endpoint": "GET /api/orders/{id}",
+      "status": 200
+    },
+    {
+      "endpoint": "PATCH /api/orders/{id}/status",
+      "case": "invalid status",
+      "status": 422
+    },
+    {
+      "endpoint": "PATCH /api/orders/{id}/status",
+      "status": 200
+    },
+    {
+      "endpoint": "DELETE /api/orders/{id}",
+      "status": 200
+    },
+    {
+      "endpoint": "GET /api/orders/{id}",
+      "case": "after delete",
+      "status": 404
+    },
+    {
+      "endpoint": "DELETE /api/products/{id}",
+      "status": 200
+    },
+    {
+      "endpoint": "GET /api/products/{id}",
+      "case": "after soft delete",
+      "status": 404
+    }
+  ]
+}

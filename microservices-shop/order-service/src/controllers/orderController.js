@@ -19,21 +19,22 @@ exports.createOrder = async (req, res) => {
 };
 exports.getOrders = async (req, res) => {
   const { page = 1, limit = 10, status } = req.query;
-  const filter = { ...(status && { status }), ...(req.params.customerId && { customerId: req.params.customerId }) };
+  if(req.params.customerId && req.user.role!=='admin' && req.params.customerId!==req.user.id) return res.status(403).json({success:false,message:'Không được xem đơn của người khác'});
+  const filter = { ...(req.user.role!=='admin' && {customerId:req.user.id}), ...(status && { status }), ...(req.params.customerId && { customerId: req.params.customerId }) };
   const [data, total] = await Promise.all([Order.find(filter).sort({ createdAt: -1, _id: -1 }).skip((page - 1) * limit).limit(limit), Order.countDocuments(filter)]);
   res.json({ success: true, data, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } });
 };
 exports.getOrderById = async (req, res) => {
-  const data = await Order.findById(req.params.id);
+  const data = await Order.findOne({ _id:req.params.id, ...(req.user.role!=='admin' && {customerId:req.user.id}) });
   if (!data) return notFound(res);
   res.json({ success: true, data });
 };
 exports.updateOrderStatus = async (req, res) => {
-  const data = await Order.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true, runValidators: true });
+  const data = await Order.findOneAndUpdate({ _id:req.params.id, ...(req.user.role!=='admin' && {customerId:req.user.id}) }, { status: req.body.status }, { new: true, runValidators: true });
   if (!data) return notFound(res);
   res.json({ success: true, data });
 };
 exports.deleteOrder = async (req, res) => {
-  if (!await Order.findByIdAndDelete(req.params.id)) return notFound(res);
+  if (!await Order.findOneAndDelete({ _id:req.params.id, ...(req.user.role!=='admin' && {customerId:req.user.id}) })) return notFound(res);
   res.json({ success: true, message: 'Đã xóa đơn hàng' });
 };

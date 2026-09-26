@@ -5,10 +5,14 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:?Copy .env.example to .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set local password}
       POSTGRES_DB: ${POSTGRES_DB:-products_db}
-    ports: ["127.0.0.1:5432:5432"]
-    volumes: [postgres_data:/var/lib/postgresql/data]
+    ports:
+    - 127.0.0.1:5432:5432
+    volumes:
+    - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test:
+      - CMD-SHELL
+      - pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB
       interval: 5s
       timeout: 5s
       retries: 20
@@ -17,10 +21,15 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?Set local user}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Set local password}
-    ports: ["127.0.0.1:27017:27017"]
-    volumes: [mongo_data:/data/db]
+    ports:
+    - 127.0.0.1:27017:27017
+    volumes:
+    - mongo_data:/data/db
     healthcheck:
-      test: ["CMD-SHELL", "mongosh --quiet --username $$MONGO_INITDB_ROOT_USERNAME --password $$MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval 'db.adminCommand({ping:1})'"]
+      test:
+      - CMD-SHELL
+      - mongosh --quiet --username $$MONGO_INITDB_ROOT_USERNAME --password $$MONGO_INITDB_ROOT_PASSWORD
+        --authenticationDatabase admin --eval 'db.adminCommand({ping:1})'
       interval: 5s
       timeout: 5s
       retries: 20
@@ -32,12 +41,23 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-products_db}
       DIRECT_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-products_db}
       ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001
+      JWT_SECRET: ${JWT_SECRET:?Run npm run setup}
+      REDIS_URL: redis://redis:6379
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
     command: sh -c "npx prisma migrate deploy && node src/index.js"
-    ports: ["127.0.0.1:3001:3001"]
+    ports:
+    - 127.0.0.1:3001:3001
     depends_on:
-      postgres: { condition: service_healthy }
+      postgres:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      test:
+      - CMD
+      - node
+      - -e
+      - fetch('http://localhost:3001/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))
       interval: 5s
       timeout: 5s
       retries: 30
@@ -49,12 +69,20 @@ services:
       MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/orders_db?authSource=admin
       PRODUCT_SERVICE_URL: http://product-service:3001
       ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3002
-    ports: ["127.0.0.1:3002:3002"]
+      JWT_SECRET: ${JWT_SECRET:?Run npm run setup}
+    ports:
+    - 127.0.0.1:3002:3002
     depends_on:
-      mongo: { condition: service_healthy }
-      product-service: { condition: service_healthy }
+      mongo:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:3002/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      test:
+      - CMD
+      - node
+      - -e
+      - fetch('http://localhost:3002/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))
       interval: 5s
       timeout: 5s
       retries: 30
@@ -66,19 +94,71 @@ services:
       ORDER_SERVICE_URL: http://order-service:3002
       AUTH_SERVICE_URL: http://auth-service:3003
       ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:3002
-    ports: ["127.0.0.1:3000:3000"]
+      JWT_SECRET: ${JWT_SECRET:?Run npm run setup}
+    ports:
+    - 127.0.0.1:3000:3000
     depends_on:
-      product-service: { condition: service_healthy }
-      order-service: { condition: service_healthy }
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
   auth-service:
-    profiles: [exercises]
     build: ./auth-service
-    environment: { PORT: 3003 }
-    ports: ["127.0.0.1:3003:3003"]
+    environment:
+      PORT: 3003
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@auth-postgres:5432/auth_db
+      DIRECT_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@auth-postgres:5432/auth_db
+      JWT_SECRET: ${JWT_SECRET:?Run npm run setup}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?Run npm run setup}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Run npm run setup}
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3002
+    command: sh -c "npx prisma migrate deploy && node src/index.js"
+    ports:
+    - 127.0.0.1:3003:3003
+    depends_on:
+      auth-postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - node
+      - -e
+      - fetch('http://localhost:3003/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))
+      interval: 5s
+      timeout: 5s
+      retries: 30
   redis:
-    profiles: [exercises]
     image: redis:7-alpine
-    ports: ["127.0.0.1:6379:6379"]
+    ports:
+    - 127.0.0.1:6379:6379
+    healthcheck:
+      test:
+      - CMD
+      - redis-cli
+      - ping
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  auth-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_DB: auth_db
+    volumes:
+    - auth_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - pg_isready -U $$POSTGRES_USER -d auth_db
+      interval: 5s
+      timeout: 5s
+      retries: 20
 volumes:
-  postgres_data:
-  mongo_data:
+  postgres_data: null
+  mongo_data: null
+  auth_postgres_data: null
