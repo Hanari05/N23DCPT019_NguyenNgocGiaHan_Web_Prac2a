@@ -1,0 +1,480 @@
+{
+  "info": {
+    "name": "Lab2a Microservices - run in order",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Run 01-17 through Gateway. Creates one product and order; deletes order and soft deletes product. No Auth solution yet."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "productId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Core flow (Products + Orders)",
+      "item": [
+        {
+          "name": "01 - Create test product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/products",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lab2a Test Keyboard\",\n  \"price\": 700000,\n  \"stock\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "if(pm.response.code===201) pm.collectionVariables.set('productId', pm.response.json().data.id);",
+                  "pm.test('Slug exists',()=>pm.expect(pm.response.json().data.slug).to.be.a('string'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - List with pagination",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/products?page=1&limit=5"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Pagination',()=>{const b=pm.response.json();pm.expect(b.data).to.be.an('array');pm.expect(b.pagination.limit).to.eql(5);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 - Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/products/{{productId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 - Full product update PUT",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/products/{{productId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lab2a Test Keyboard Updated\",\n  \"price\": 800000,\n  \"stock\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 - Filter and sort",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/products?search=Lab2a&minPrice=100&sortBy=price&order=asc"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Sorted',()=>{const a=pm.response.json().data;a.forEach((x,i)=>{if(i)pm.expect(Number(a[i-1].price)).to.be.at.most(Number(x.price));});});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 - Invalid product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/products",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"price\": -1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Detailed errors',()=>pm.expect(pm.response.json().errors).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 - Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/categories"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 - Create order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"customerName\": \"Nguyễn Ngọc Gia Hân\",\n  \"customerEmail\": \"han@example.com\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"quantity\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "if(pm.response.code===201) pm.collectionVariables.set('orderId', pm.response.json().data._id);",
+                  "pm.test('Server total',()=>pm.expect(pm.response.json().data.totalAmount).to.eql(1600000));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 - List orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/orders?page=1&limit=5"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10 - Customer orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/orders/customer/1?status=pending"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11 - Read order",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/orders/{{orderId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "12 - PATCH status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/{{orderId}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status changed',()=>pm.expect(pm.response.json().data.status).to.eql('confirmed'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "13 - Invalid status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/{{orderId}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"wrong\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14 - Delete test order",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/orders/{{orderId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "15 - Deleted order returns 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/orders/{{orderId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "16 - Soft delete test product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/products/{{productId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "17 - Hidden product returns 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/products/{{productId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth (TODO - currently 501)",
+      "item": [
+        {
+          "name": "POST register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/auth/register"
+          }
+        },
+        {
+          "name": "POST login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/auth/login"
+          }
+        },
+        {
+          "name": "POST refresh",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/auth/refresh"
+          }
+        },
+        {
+          "name": "GET me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/auth/me"
+          }
+        }
+      ]
+    }
+  ]
+}

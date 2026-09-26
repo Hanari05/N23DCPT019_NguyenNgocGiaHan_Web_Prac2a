@@ -1,0 +1,17 @@
+# Use: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+services:
+  product-service:
+    build: { context: ./product-service, dockerfile: Dockerfile.dev }
+    environment: { NODE_ENV: development }
+    volumes: ["./product-service/src:/app/src", "./product-service/prisma:/app/prisma"]
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && npm run dev"
+  order-service:
+    build: { context: ./order-service, dockerfile: Dockerfile.dev }
+    environment: { NODE_ENV: development }
+    volumes: ["./order-service/src:/app/src"]
+    command: npm run dev
+  api-gateway:
+    build: { context: ./api-gateway, dockerfile: Dockerfile.dev }
+    environment: { NODE_ENV: development }
+    volumes: ["./api-gateway/src:/app/src"]
+    command: npm run dev

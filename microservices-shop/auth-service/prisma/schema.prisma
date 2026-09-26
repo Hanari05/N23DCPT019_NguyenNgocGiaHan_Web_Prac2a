@@ -1,0 +1,10 @@
+// Exercise 1: install pinned prisma/@prisma/client and implement User + RefreshToken.
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+// TODO: User (unique email, passwordHash, role), RefreshToken (hash, expiresAt, revokedAt).

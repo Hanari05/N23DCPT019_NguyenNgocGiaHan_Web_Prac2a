@@ -1,0 +1,10 @@
+const router = require('express').Router();
+const c = require('../controllers/productController');
+const v = require('../middleware/productValidation');
+const wrap = require('../middleware/asyncHandler');
+router.get('/', v.productQuery, wrap(c.getProducts));
+router.get('/:id', v.id, wrap(c.getProductById));
+router.post('/', v.productBody, wrap(c.createProduct));
+router.put('/:id', v.id, v.productBody, wrap(c.updateProduct));
+router.delete('/:id', v.id, wrap(c.deleteProduct));
+module.exports = router;

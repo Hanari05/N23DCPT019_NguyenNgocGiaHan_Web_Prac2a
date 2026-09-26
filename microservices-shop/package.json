@@ -1,0 +1,14 @@
+{
+  "name": "lab2a-microservices-shop",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "install:all": "node scripts/install.js",
+    "test": "node scripts/test.js",
+    "test:live": "node scripts/smoke.js"
+  }
+}

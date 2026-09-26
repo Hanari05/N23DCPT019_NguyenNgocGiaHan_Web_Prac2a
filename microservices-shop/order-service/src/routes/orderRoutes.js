@@ -1,0 +1,11 @@
+const router = require('express').Router();
+const c = require('../controllers/orderController');
+const v = require('../middleware/orderValidation');
+const wrap = require('../middleware/asyncHandler');
+router.get('/', v.list, wrap(c.getOrders));
+router.get('/customer/:customerId', v.customerId, v.list, wrap(c.getOrders));
+router.get('/:id', v.id, wrap(c.getOrderById));
+router.post('/', v.create, wrap(c.createOrder));
+router.patch('/:id/status', v.id, v.status, wrap(c.updateOrderStatus));
+router.delete('/:id', v.id, wrap(c.deleteOrder));
+module.exports = router;
