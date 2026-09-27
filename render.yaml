@@ -7,7 +7,6 @@ services:
     region: singapore
     dockerfilePath: ./microservices-shop/product-service/Dockerfile
     dockerContext: ./microservices-shop/product-service
-    dockerCommand: sh -c 'npm run db:migrate && npm run db:seed && exec node src/index.js'
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV

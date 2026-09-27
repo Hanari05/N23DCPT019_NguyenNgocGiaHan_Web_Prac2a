@@ -16,4 +16,4 @@ COPY --from=builder /app/prisma ./prisma
 COPY src ./src
 USER node
 EXPOSE 3001
-CMD ["node", "src/index.js"]
+CMD ["sh", "-c", "npm run db:migrate && npm run db:seed && exec node src/index.js"]
