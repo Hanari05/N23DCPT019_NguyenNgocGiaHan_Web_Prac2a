@@ -1,0 +1,24 @@
+{
+  "success": true,
+  "data": {
+    "id": 2,
+    "name": "Samsung Galaxy S24",
+    "slug": "samsung-s24",
+    "description": null,
+    "price": "22990000",
+    "stock": 30,
+    "imageUrl": null,
+    "isActive": true,
+    "categoryId": 1,
+    "createdAt": "2026-09-27T15:17:00.061Z",
+    "updatedAt": "2026-09-27T15:17:00.061Z",
+    "category": {
+      "id": 1,
+      "name": "Điện thoại",
+      "slug": "mobile",
+      "description": null,
+      "createdAt": "2026-09-27T15:16:59.979Z",
+      "updatedAt": "2026-09-27T15:16:59.979Z"
+    }
+  }
+}

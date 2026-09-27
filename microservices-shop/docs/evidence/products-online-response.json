@@ -1,0 +1,53 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 4,
+      "name": "Chuột máy tính",
+      "slug": "chuot-may-tinh",
+      "description": null,
+      "price": "300000",
+      "stock": 0,
+      "imageUrl": null,
+      "isActive": true,
+      "categoryId": 2,
+      "createdAt": "2026-09-27T15:17:00.061Z",
+      "updatedAt": "2026-09-27T15:17:00.061Z",
+      "category": {
+        "id": 2,
+        "name": "Phụ kiện",
+        "slug": "accessories",
+        "description": null,
+        "createdAt": "2026-09-27T15:17:00.015Z",
+        "updatedAt": "2026-09-27T15:17:00.015Z"
+      }
+    },
+    {
+      "id": 3,
+      "name": "Bàn phím cơ",
+      "slug": "ban-phim-co",
+      "description": null,
+      "price": "700000",
+      "stock": 20,
+      "imageUrl": null,
+      "isActive": true,
+      "categoryId": 2,
+      "createdAt": "2026-09-27T15:17:00.061Z",
+      "updatedAt": "2026-09-27T15:17:00.061Z",
+      "category": {
+        "id": 2,
+        "name": "Phụ kiện",
+        "slug": "accessories",
+        "description": null,
+        "createdAt": "2026-09-27T15:17:00.015Z",
+        "updatedAt": "2026-09-27T15:17:00.015Z"
+      }
+    }
+  ],
+  "pagination": {
+    "total": 4,
+    "page": 1,
+    "limit": 2,
+    "totalPages": 2
+  }
+}
