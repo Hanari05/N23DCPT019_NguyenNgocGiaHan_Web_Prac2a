@@ -75,7 +75,7 @@ Phiên bản deploy được chụp: **`c73860d`**, trạng thái **Live**, ngà
 | GET `/api/products?page=1&limit=2&sortBy=price&order=asc` | 200; sản phẩm đầu là Chuột máy tính, giá 300.000 |
 | GET `/api/products/2` | 200; Samsung Galaxy S24, giá 22.990.000, stock=30, khớp danh sách |
 
-Ảnh request phân trang bị cắt phần cuối nên chưa thể đối chiếu đầy đủ sản phẩm thứ hai và pagination chỉ từ ảnh đó. Các bằng chứng hiện có xác nhận Product online đọc được dữ liệu và Swagger thực hiện request thành công.
+File JSON minh chứng xác nhận request trả đúng 2 sản phẩm theo giá tăng dần; pagination có total=4, page=1, limit=2 và totalPages=2.
 
 ### Minh chứng online
 
